@@ -4,19 +4,36 @@ const port = 3000;
 
 // In-memory task storage
 let tasks = [
-    { id: 1, title: 'Task One', description: 'Task one ', completed: false },
-    { id: 2, title: 'Task Two', description: 'Task Two ', completed: true },
-    { id: 3, title: 'Task Three', description: 'Task Three ', completed: false },
+    { id: 1, title: 'Task One', description: 'Task one ', completed: false, priority: 'high' },
+    { id: 2, title: 'Task Two', description: 'Task Two ', completed: true, priority: 'medium' },
+    { id: 3, title: 'Task Three', description: 'Task Three ', completed: false, priority: 'low' },
 ];
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Route to get all tasks
+// Route to get all tasks with optional filtering by completion status
 app.get('/tasks', (req, res) => {
+    const {completed} = req.query;
+    let filteredTasks = tasks;
+    if(completed !== undefined) {
+        filteredTasks = filteredTasks.filter(t => t.completed.toString() === completed);
+    }
+
     let obj = {
             status: 'success',
-            data: tasks
+            data: filteredTasks
+        }
+    res.json(obj);
+});
+
+app.get('/tasks/priority/:level', (req, res) => {
+    const priorityLevel = req.params.level;
+    let filteredTasks = tasks.filter(t => t.priority === priorityLevel);
+
+    let obj = {
+            status: 'success',
+            data: filteredTasks
         }
     res.json(obj);
 });
@@ -38,7 +55,7 @@ app.get('/tasks/:id', (req, res) => {
 
 // Route to create a new task
 app.post('/tasks', (req, res) => {
-    let { title, description, completed } = req.body;
+    let { title, description, completed, priority } = req.body;
 
     if(!title || !description) {
         return res.status(400).json({status: 'failed', message: 'Title and description are required' });
@@ -49,6 +66,7 @@ app.post('/tasks', (req, res) => {
         title: title,
         description: description,
         completed: completed ?? false,
+        priority: priority ?? 'low'
     };
     tasks.push(newTask);
     res.status(201).json({status: 'success', data: newTask});
@@ -62,6 +80,7 @@ app.put('/tasks/:id', (req, res) => {
         task.title = req.body.title !== undefined ? req.body.title : task.title;
         task.description = req.body.description !== undefined ? req.body.description : task.description;
         task.completed = req.body.completed !== undefined ? req.body.completed : task.completed;
+        task.priority = req.body.priority !== undefined ? req.body.priority : task.priority;
         res.status(201).json({status: 'success', data: task});
     } else {
         res.status(404).json({status: 'failed', message: 'Task not found' });
