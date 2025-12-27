@@ -1,13 +1,7 @@
 const express = require('express');
 const app = express();
 const port = 3000;
-
-// In-memory task storage
-let tasks = [
-    { id: 1, title: 'Task One', description: 'Task one ', completed: false, priority: 'high' },
-    { id: 2, title: 'Task Two', description: 'Task Two ', completed: true, priority: 'medium' },
-    { id: 3, title: 'Task Three', description: 'Task Three ', completed: false, priority: 'low' },
-];
+let { tasks } = require('./task.json');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
