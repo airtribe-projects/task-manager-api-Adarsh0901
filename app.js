@@ -14,22 +14,22 @@ app.get('/tasks', (req, res) => {
         filteredTasks = filteredTasks.filter(t => t.completed.toString() === completed);
     }
 
-    let obj = {
-            status: 'success',
-            data: filteredTasks
-        }
-    res.json(obj);
+    // let obj = {
+    //         status: 'success',
+    //         data: filteredTasks
+    //     }
+    res.status(200).json(filteredTasks);
 });
 
 app.get('/tasks/priority/:level', (req, res) => {
     const priorityLevel = req.params.level;
     let filteredTasks = tasks.filter(t => t.priority === priorityLevel);
 
-    let obj = {
-            status: 'success',
-            data: filteredTasks
-        }
-    res.json(obj);
+    // let obj = {
+    //         status: 'success',
+    //         data: filteredTasks
+    //     }
+    res.status(200).json(filteredTasks);
 });
 
 // Route to get a specific task by ID
@@ -37,11 +37,11 @@ app.get('/tasks/:id', (req, res) => {
     const taskId = parseInt(req.params.id, 10);
     const task = tasks.find(t => t.id === taskId);
     if (task) {
-        let obj = {
-            status: 'success',
-            data: task
-        }
-        res.json(obj);
+        // let obj = {
+        //     status: 'success',
+        //     data: task
+        // }
+        res.status(200).json(task);
     } else {
         res.status(404).json({status:'failed', message: 'Task not found' });
     }
@@ -51,7 +51,7 @@ app.get('/tasks/:id', (req, res) => {
 app.post('/tasks', (req, res) => {
     let { title, description, completed, priority } = req.body;
 
-    if(!title || !description) {
+    if(!title && !description) {
         return res.status(400).json({status: 'failed', message: 'Title and description are required' });
     }
 
@@ -63,19 +63,30 @@ app.post('/tasks', (req, res) => {
         priority: priority ?? 'low'
     };
     tasks.push(newTask);
-    res.status(201).json({status: 'success', data: newTask});
+    res.status(201).json(newTask);
 });
 
 // Route to update an existing task
 app.put('/tasks/:id', (req, res) => {
     const taskId = parseInt(req.params.id, 10);
     const task = tasks.find(t => t.id === taskId);
+    let { title, description, completed, priority } = req.body;
+    if(!title && !description) {
+        return res.status(400).json({status: 'failed', message: 'All field (title, description) is required to update' });
+    }
+
+    if(typeof completed !== 'undefined' && typeof completed !== 'boolean') {
+        return  res.status(400).json({status: 'failed', message: 'Completed field must be boolean' });
+    }
+    if(priority && !['low', 'medium', 'high'].includes(priority)) {
+        return res.status(400).json({status: 'failed', message: 'Priority must be one of low, medium, high' });
+    }
     if (task) {
-        task.title = req.body.title !== undefined ? req.body.title : task.title;
-        task.description = req.body.description !== undefined ? req.body.description : task.description;
-        task.completed = req.body.completed !== undefined ? req.body.completed : task.completed;
-        task.priority = req.body.priority !== undefined ? req.body.priority : task.priority;
-        res.status(201).json({status: 'success', data: task});
+        task.title = title !== undefined ? title : task.title;
+        task.description = description !== undefined ? description : task.description;
+        task.completed = completed !== undefined ? completed : task.completed;
+        task.priority = priority !== undefined ? priority : task.priority;
+        res.status(200).json(task);
     } else {
         res.status(404).json({status: 'failed', message: 'Task not found' });
     }
@@ -87,7 +98,7 @@ app.delete('/tasks/:id', (req, res) => {
     const taskIndex = tasks.findIndex(t => t.id === taskId);
     if (taskIndex !== -1) {
         tasks.splice(taskIndex, 1);
-        res.status(204).json({status: 'success', message: 'Task deleted' });
+        res.status(200).json({status: 'success', message: 'Task deleted' });
     } else {
         res.status(404).json({status:'failed', message: 'Task not found' });
     }
